@@ -1,35 +1,92 @@
+
 @extends('frontend.layouts.app')
 
-@section('title', __('Applications'))
+@section('title', __('Job Applications'))
 
 @section('page_header')
-    <h1 class="text-2xl font-semibold tracking-tight text-hb-navy">{{ __('Applications') }}</h1>
+    <h1 class="text-2xl font-bold">Job Applications</h1>
 @endsection
 
 @section('content')
-@php $items = \App\Support\Rows::from($applications ?? []); $meta = \App\Support\Rows::meta($applications ?? null); @endphp
+    <div class="space-y-6">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+                <h2 class="text-xl font-semibold">Applications</h2>
+                <p class="mt-1 text-sm text-gray-500">
+                    Review and manage applications for your vacancies.
+                </p>
+            </div>
+        </div>
 
-<x-table>
-    <x-slot:head>
-        <th class="px-4 py-3 text-start">{{ __('Candidate') }}</th>
-        <th class="px-4 py-3 text-start">{{ __('Status') }}</th>
-        <th class="px-4 py-3 text-start">{{ __('Applied') }}</th>
-        <th class="px-4 py-3 text-end">{{ __('Actions') }}</th>
-    </x-slot:head>
+        @if (session('success'))
+            <div class="rounded-lg bg-green-100 p-4 text-green-800">
+                {{ session('success') }}
+            </div>
+        @endif
 
-    @forelse ($items as $row)
-        <tr>
-            <td class="px-4 py-3">{{ data_get($row, 'candidate.name') ?? data_get($row, 'candidate_name') ?? '—' }}</td>
-            <td class="px-4 py-3"><x-badge :variant="\App\Support\Rows::badgeVariant(data_get($row, 'status'))" :dot="true">{{ data_get($row, 'status', '—') }}</x-badge></td>
-            <td class="px-4 py-3">{{ \App\Support\Rows::date(data_get($row, 'applied_at')) }}</td>
-            <td class="px-4 py-3"><div class="flex flex-wrap justify-end gap-2">
-                <x-button variant="light" size="sm" :href="route('frontend.company.applications.status', ['applicationId' => data_get($row, 'id')])">{{ __('Change status') }}</x-button>
-                <x-button variant="light" size="sm" :href="route('frontend.company.offers.create', ['application_id' => data_get($row, 'id')])">{{ __('Send offer') }}</x-button>
-            </div></td>
-        </tr>
-    @empty
-        <tr><td colspan="4" class="px-4 py-10 text-center text-hb-muted">{{ __('Nothing to show yet.') }}</td></tr>
-    @endforelse
-</x-table>
-@include('frontend.partials.pagination', ['meta' => $meta])
+        @if (session('error'))
+            <div class="rounded-lg bg-red-100 p-4 text-red-800">
+                {{ session('error') }}
+            </div>
+        @endif
+
+        <div class="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-gray-50 text-gray-700">
+                    <tr>
+                        <th class="px-4 py-3">#</th>
+                        <th class="px-4 py-3">Candidate</th>
+                        <th class="px-4 py-3">Vacancy</th>
+                        <th class="px-4 py-3">Applied At</th>
+                        <th class="px-4 py-3">Status</th>
+                        <th class="px-4 py-3">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody class="divide-y divide-gray-200">
+                    @forelse ($items as $item)
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-3">
+                                {{ $item->id ?? '—' }}
+                            </td>
+
+                            <td class="px-4 py-3">
+                                {{ data_get($item, 'candidate.name', 'N/A') }}
+                            </td>
+
+                            <td class="px-4 py-3">
+                                {{ data_get($item, 'vacancy.title', 'N/A') }}
+                            </td>
+
+                            <td class="px-4 py-3">
+                                {{ $item->created_at?->format('Y-m-d') ?? '—' }}
+                            </td>
+
+                            <td class="px-4 py-3">
+                                <span class="inline-flex rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
+                                    {{ ucfirst((string) ($item->status ?? 'pending')) }}
+                                </span>
+                            </td>
+
+                            <td class="px-4 py-3">
+                                <a
+                                    href="{{ url('/company/applications/' . $item->id . '/status') }}"
+                                    class="font-medium text-blue-600 hover:underline"
+                                >
+                                    View / Update
+                                </a>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                                No applications found.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
 @endsection
++

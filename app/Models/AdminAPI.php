@@ -321,7 +321,7 @@ class AdminAPI
         ];
     }
 
-    public function getCompany($companyId)
+      public function getCompanyDetails($companyId)
     {
         $res = $this->api->reset()->method('GET')
             ->url("/admin/companies/{$companyId}/details")

@@ -41,6 +41,9 @@ Route::prefix('/')->name('frontend.')->group(function () {
         Route::get('/search', [JobController::class, 'searchJobs'])->name('search');
         Route::get('/{jobId}', [JobController::class, 'getJob'])->name('show');
     });
+    // Public company page: header + Overview / Culture / Open Roles tabs, hiring team, locations
+    Route::get('/companies/{companyId}', [CompanyController::class, 'show'])->whereNumber('companyId')->name('companies.show');
+
     Route::prefix('lookup')->name('lookup.')->group(function () {
         Route::get('/countries', [LookupController::class, 'getCountries'])->name('countries');
         Route::get('/categories', [LookupController::class, 'getCategories'])->name('categories');
@@ -140,7 +143,16 @@ Route::prefix('/')->name('frontend.')->group(function () {
         Route::post('/vacancies/{vacancyId}/update', [CompanyController::class, 'updateVacancy'])->name('vacancies.update.submit');
         Route::delete('/vacancies/{vacancyId}/delete', [CompanyController::class, 'deleteVacancy'])->name('vacancies.delete');
         Route::get('/vacancies/{vacancyId}/applications', [CompanyController::class, 'getApplications'])->name('vacancies.applications');
-        Route::get('/applications/{applicationId}/status', [CompanyController::class, 'updateApplicationStatus'])->name('applications.status');
+        
+        // تطبيقات الشركة
+        Route::get('/applications', function () {
+            return view('frontend.company.applications');
+        })->name('applications.index');
+
+        Route::get('/applications/{applicationId}/status', function ($applicationId) {
+            return view('frontend.company.update-application-status', ['applicationId' => $applicationId]);
+        })->name('applications.status');
+
         Route::post('/applications/{applicationId}/status', [CompanyController::class, 'updateApplicationStatus'])->name('applications.status.submit');
 
         Route::get('/exams/create', [CompanyController::class, 'createExam'])->name('exams.create');
@@ -164,7 +176,7 @@ Route::prefix('/')->name('frontend.')->group(function () {
         Route::delete('/employees/{employeeId}/remove', [EmployeeController::class, 'removeEmployee'])->name('employees.remove');
     });
 
-    // Interviewer (a company account that has the interviewer role - the backend enforces the permissions)
+    // Interviewer
     Route::prefix('interviewer')->middleware(['auth', 'account:company'])->name('interviewer.')->group(function () {
         Route::get('/interviews', [InterviewerController::class, 'getInterviews'])->name('interviews.index');
         Route::get('/interviews/{interviewId}', [InterviewerController::class, 'getInterview'])->name('interviews.show');
@@ -174,7 +186,7 @@ Route::prefix('/')->name('frontend.')->group(function () {
         Route::post('/availability/add', [InterviewerController::class, 'addAvailability'])->name('availability.add.submit');
     });
 
-    // Admin (Super Admin): session account gate + Backend /auth/me revalidation
+    // Admin (Super Admin)
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->middleware(['auth', 'account:admin', 'admin.session'])->name('dashboard');
     Route::prefix('admin')->middleware(['auth', 'account:admin', 'admin.session'])->name('admin.')->group(function () {
         Route::get('/companies', [AdminController::class, 'getCompanies'])->name('companies.index');
